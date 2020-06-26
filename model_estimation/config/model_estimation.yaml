@@ -1,0 +1,6 @@
+class_num: 4
+epoch_num: 2
+log_path: "log"
+parameter_load: True
+parameter_save: True
+model_path: "model"
