@@ -1,6 +1,6 @@
 # Append the directory for torchvision
 import sys
-sys.path.append("/home/harvey/Softwares/vision/references/detection")
+sys.path.append('/home/harvey/Softwares/vision/references/detection')
 
 import time
 import os
@@ -62,7 +62,7 @@ Evaluation method
 '''
 @torch.no_grad()
 def visual_evaluate(model, dataset, device, writer, class_names, epoch):
-    cpu_device = torch.device("cpu")
+    cpu_device = torch.device('cpu')
     model.eval()
     num_test = min(len(dataset), 20)
     for idx in range(num_test):
@@ -75,14 +75,30 @@ def visual_evaluate(model, dataset, device, writer, class_names, epoch):
         image = target['raw_image'].numpy()
         boxes = output['boxes'].numpy()
         masks = output['masks'].numpy()
+        masks = np.squeeze(masks)
         labels = output['labels'].numpy()
         scores = output['scores'].numpy()
+
+        gt_boxes = target['boxes'].numpy()
+        gt_masks = target['masks'].numpy()
+        gt_labels = target['labels'].numpy()
+        
+        # box check
+        # Add training result visualization
         visualize.display_instances_tensorboard(
             image, boxes, masks, labels, class_names, writer,
             scores=None,
-            show_mask=False, 
+            show_mask=True, 
             show_bbox=True,
-            title='image:{}|epoch: {}'.format(idx, epoch))
+            title='Val:{}|epoch: {}'.format(idx, epoch))
+        
+        # Add Ground truth comparison visualization
+        visualize.display_instances_tensorboard(
+            image, gt_boxes, gt_masks, gt_labels, class_names, writer,
+            scores=None,
+            show_mask=True, 
+            show_bbox=True,
+            title='GT:{}|epoch: {}'.format(idx, epoch))
 
 
 '''
@@ -125,9 +141,10 @@ def main():
     # get the model using our helper function
     model = get_model_instance_segmentation(class_num)
     # load model
-    save_path = os.path.join(root_path, "..", config['model_path'], 'params.pkl')
+    save_path = os.path.join(root_path, '..', config['model_path'], 'params.pkl')
     if config['parameter_load']:
         model.load_state_dict(torch.load(save_path))
+        print('Model Loaded!')
     model.to(device)
 
     # construct an optimizer
@@ -139,7 +156,7 @@ def main():
                                                    step_size=3,
                                                    gamma=0.1)
     # clearn previous log add writter
-    log_path = os.path.join(root_path, "..", config['log_path'], time.asctime())
+    log_path = os.path.join(root_path, '..', config['log_path'], time.asctime())
     writer = SummaryWriter(log_path)
     # class names initialize
     class_names = ['background',
@@ -151,7 +168,7 @@ def main():
     for epoch in range(epoch_num):
         # train for one epoch, printing every 10 iterations
         metric_logger = train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
-        writer.add_scalar("Loss", metric_logger.loss.value)
+        writer.add_scalar('Loss', metric_logger.loss.value)
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
@@ -163,7 +180,8 @@ def main():
     # save the paramters
     if config['parameter_save']:
         torch.save(model.state_dict(), save_path)
+        print('Model Saved!')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

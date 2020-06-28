@@ -162,6 +162,7 @@ def display_instances(image, boxes, masks, class_ids, class_names,
 
 
 # finetune for torch maskrcnn
+# change for my dataset
 def display_instances_tensorboard(
     image, boxes, masks, class_ids, class_names, writer,
     scores=None, title="",
@@ -171,7 +172,7 @@ def display_instances_tensorboard(
     """
     image: [height, width, 3]
     boxes: [num_instance, (y1, x1, y2, x2, class_id)] in image coordinates.
-    masks: [num_instances, 1, height, width]
+    masks: [num_instances, height, width]
     class_ids: [num_instances]
     class_names: list of class names of the dataset
     writer: tensorboard writer
@@ -210,8 +211,8 @@ def display_instances_tensorboard(
         if not np.any(boxes[i]):
             # Skip this instance. Has no bbox. Likely lost in image cropping.
             continue
-        y1, x1, y2, x2 = boxes[i]
-        if show_bbox and class_ids[i]==4:
+        x1, y1, x2, y2 = boxes[i]
+        if show_bbox:
             p = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2,
                                 alpha=0.7, linestyle="dashed",
                                 edgecolor=color, facecolor='none')
@@ -229,7 +230,7 @@ def display_instances_tensorboard(
                 color='w', size=11, backgroundcolor="none")
 
         # Mask
-        mask = masks[i, 0, :, :]
+        mask = masks[i, :, :]
         if show_mask:
             masked_image = apply_mask(masked_image, mask, color)
 
