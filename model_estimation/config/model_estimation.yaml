@@ -1,6 +1,6 @@
 class_num: 4
 epoch_num: 20
 log_path: "log"
-parameter_load: False
+parameter_load: True
 parameter_save: True
 model_path: "model"

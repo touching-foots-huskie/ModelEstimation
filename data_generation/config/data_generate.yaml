@@ -31,4 +31,4 @@ params:
   light_position_range_y: [-0.12, 0.12]
   light_position_range_z: [1.5, 2.0]
 
-iter_num : 50
+iter_num : 100

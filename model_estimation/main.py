@@ -65,8 +65,9 @@ def visual_evaluate(model, dataset, device, writer, class_names, epoch):
     cpu_device = torch.device('cpu')
     model.eval()
     num_test = min(len(dataset), 20)
+    num_data = len(dataset)
     for idx in range(num_test):
-        image, target = dataset[idx]  # target is the ground truth
+        image, target = dataset[num_data-idx-1]  # target is the ground truth
         image = image.to(device)
         # get outputs
         output = model([image])
@@ -169,6 +170,9 @@ def main():
         # train for one epoch, printing every 10 iterations
         metric_logger = train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
         writer.add_scalar('Loss', metric_logger.loss.value)
+        writer.add_scalar('Mask Loss', metric_logger.loss_mask.value)
+        writer.add_scalar('Box Loss', metric_logger.loss_box_reg.value)
+        writer.add_scalar('Class Loss', metric_logger.loss_classifier.value)
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
