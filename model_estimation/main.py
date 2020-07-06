@@ -18,9 +18,17 @@ import torch
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
+from torchvision.models.detection.mask_rcnn import MaskRCNNHeads
 
 import blender_dataset
 import visualize
+
+
+'''
+Initial Weight
+'''
+def init_weights(m):
+    torch.nn.init.xavier_uniform(m.weight)
 
 
 '''
@@ -35,11 +43,21 @@ def get_model_instance_segmentation(class_num):
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, class_num)
 
     # Replace the mask prediction head
+    # mask predictor
     in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
     hidden_layer = 256
     model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,
                                                        hidden_layer,
                                                        class_num)
+    
+    # mask head
+    out_channels = model.backbone.out_channels
+    mask_layers = (256, 256, 256, 256)
+    mask_dilation = 1
+    model.roi_heads.mask_head = MaskRCNNHeads(out_channels,
+                                              mask_layers, 
+                                              mask_dilation)
+    
     # change NMS threshold and detection number
     model.roi_heads.nms_thresh = 0.1
     model.roi_heads.detections_per_img = 10
@@ -146,12 +164,15 @@ def main():
     if config['parameter_load']:
         model.load_state_dict(torch.load(save_path))
         print('Model Loaded!')
-    model.to(device)
 
+    model.to(device)
     # construct an optimizer
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=0.005,
-                                momentum=0.9, weight_decay=0.0005)  
+    params = [p for p in model.parameters() if p.requires_grad]  # take out grad-parameters
+    # # previous optimizer
+    # optimizer = torch.optim.SGD(params, lr=0.005,
+    #                             momentum=0.9, weight_decay=0.0005)  
+    # use Adam instead
+    optimizer = torch.optim.Adam(params, lr=0.005, weight_decay=0.0005)
     # and a learning rate scheduler
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                    step_size=3,
