@@ -51,12 +51,12 @@ def get_model_instance_segmentation(class_num):
                                                        class_num)
     
     # mask head
-    out_channels = model.backbone.out_channels
-    mask_layers = (256, 256, 256, 256)
-    mask_dilation = 1
-    model.roi_heads.mask_head = MaskRCNNHeads(out_channels,
-                                              mask_layers, 
-                                              mask_dilation)
+    # out_channels = model.backbone.out_channels
+    # mask_layers = (256, 256, 256, 256)
+    # mask_dilation = 1
+    # model.roi_heads.mask_head = MaskRCNNHeads(out_channels,
+    #                                           mask_layers, 
+    #                                           mask_dilation)
     
     # change NMS threshold and detection number
     model.roi_heads.nms_thresh = 0.1
